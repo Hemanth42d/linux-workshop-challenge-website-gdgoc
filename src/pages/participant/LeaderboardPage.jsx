@@ -1,111 +1,165 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { subscribeLeaderboard, subscribeActivityFeed, subscribeGameState } from '../../services/firestore';
-import Card from '../../components/Card';
-import StatusBadge from '../../components/StatusBadge';
-import { Trophy, Medal, ArrowLeft, Activity } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
+import { subscribeLeaderboard, subscribeSubmissions } from '../../services/firestore';
+import UbuntuTerminal, { TerminalPrompt, TerminalOutput } from '../../components/UbuntuTerminal';
 
-const rankColors = ['text-[#FBBC05]', 'text-gray-400', 'text-amber-700'];
+const rankBadge = (rank) => {
+  if (rank === 1) return '🥇';
+  if (rank === 2) return '🥈';
+  if (rank === 3) return '🥉';
+  return `${rank}.`;
+};
+
+const scoreBar = (score, maxScore) => {
+  if (!maxScore) return '';
+  const filled = Math.round((score / maxScore) * 20);
+  return '█'.repeat(filled) + '░'.repeat(20 - filled);
+};
 
 export default function LeaderboardPage() {
+  const { userId } = useOutletContext();
   const [leaders, setLeaders] = useState([]);
-  const [feed, setFeed] = useState([]);
-  const [gameState, setGameState] = useState(null);
-  const navigate = useNavigate();
-  const userId = localStorage.getItem('workshopUserId');
+  const [firstSolverCounts, setFirstSolverCounts] = useState({});
 
   useEffect(() => {
-    const unsubs = [
-      subscribeLeaderboard(setLeaders),
-      subscribeActivityFeed(setFeed),
-      subscribeGameState(setGameState),
-    ];
-    return () => unsubs.forEach((u) => u());
+    const unsub = subscribeLeaderboard(setLeaders);
+    return unsub;
   }, []);
 
+  // Track who has the most "first to solve" badges
+  useEffect(() => {
+    const unsub = subscribeSubmissions((subs) => {
+      const counts = {};
+      subs.filter((s) => s.isFirstSolver).forEach((s) => {
+        counts[s.userId] = (counts[s.userId] || 0) + 1;
+      });
+      setFirstSolverCounts(counts);
+    });
+    return unsub;
+  }, []);
+
+  const maxScore = leaders.length > 0 ? Math.max(...leaders.map((u) => u.score || 0), 1) : 1;
+
+  // Find the user with most first-solves
+  const topSolverId = Object.entries(firstSolverCounts).sort((a, b) => b[1] - a[1])[0]?.[0];
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
-      <div className="max-w-4xl mx-auto pt-8 animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-gray-100 rounded-lg cursor-pointer" aria-label="Go back">
-              <ArrowLeft size={20} className="text-gray-500" />
-            </button>
-            <h1 className="text-xl font-bold text-gray-900">Leaderboard</h1>
-          </div>
-          {gameState && <StatusBadge status={gameState.status} />}
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              {leaders.length === 0 ? (
-                <p className="text-center text-gray-400 py-8">No participants yet</p>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm" role="table">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="text-left py-3 px-2 text-gray-500 font-medium">Rank</th>
-                        <th className="text-left py-3 px-2 text-gray-500 font-medium">Name</th>
-                        <th className="text-right py-3 px-2 text-gray-500 font-medium">Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {leaders.map((u) => (
-                        <tr key={u.id} className={`border-b border-gray-50 ${u.id === userId ? 'bg-blue-50/50' : ''}`}>
-                          <td className="py-3 px-2">
-                            <div className="flex items-center gap-1">
-                              {u.rank <= 3 ? (
-                                <Medal size={18} className={rankColors[u.rank - 1]} />
-                              ) : (
-                                <span className="text-gray-400 w-[18px] text-center">{u.rank}</span>
-                              )}
-                            </div>
-                          </td>
-                          <td className="py-3 px-2 font-medium text-gray-900">
-                            {u.name} {u.id === userId && <span className="text-xs text-[#4285F4] ml-1">(You)</span>}
-                          </td>
-                          <td className="py-3 px-2 text-right font-bold text-[#4285F4]">{u.score || 0}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+    <div className="max-w-4xl mx-auto animate-fade-in">
+      <h1 className="text-2xl font-bold text-[#eeeeec] mb-6 font-mono">Leaderboard</h1>
+
+      {/* Top 3 podium */}
+      {leaders.length >= 3 && (
+        <div className="grid grid-cols-3 gap-4 mb-6">
+          {[leaders[1], leaders[0], leaders[2]].map((u, i) => {
+            const pos = [2, 1, 3][i];
+            const colors = {
+              1: 'border-[#FBBC05] bg-[#FBBC05]/10',
+              2: 'border-[#888a85] bg-[#888a85]/10',
+              3: 'border-[#EA4335]/60 bg-[#EA4335]/5',
+            };
+            const isFastest = u.id === topSolverId && firstSolverCounts[u.id] > 0;
+            return (
+              <div key={u.id} className={`rounded-xl border p-5 text-center ${colors[pos]} ${pos === 1 ? 'scale-105' : ''}`}>
+                <div className="text-3xl mb-2">{rankBadge(pos)}</div>
+                <p className="text-lg font-bold text-[#eeeeec] truncate">{u.name}</p>
+                <p className="text-sm font-mono text-[#ad7fa8] mt-0.5">{u.registerNumber}</p>
+                <p className="text-2xl font-bold font-mono text-[#34e534] mt-2">{u.score || 0}</p>
+                <div className="flex items-center justify-center gap-2 mt-1 flex-wrap">
+                  <span className="text-xs font-mono text-[#888a85]">points</span>
+                  {(u.streak || 0) > 0 && (
+                    <span className="text-xs font-mono text-[#FBBC05]">🔥{u.streak}</span>
+                  )}
+                  {isFastest && (
+                    <span className="text-xs font-mono text-[#FBBC05]">⚡{firstSolverCounts[u.id]}</span>
+                  )}
                 </div>
-              )}
-            </Card>
-          </div>
-          <div>
-            <Card>
-              <div className="flex items-center gap-2 mb-4">
-                <Activity size={16} className="text-[#34A853]" />
-                <h3 className="font-semibold text-gray-900 text-sm">Activity Feed</h3>
               </div>
-              {feed.length === 0 ? (
-                <p className="text-xs text-gray-400">No activity yet</p>
-              ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {feed.map((item) => (
-                    <div key={item.id} className="flex items-start gap-2 text-xs p-2 rounded-lg bg-gray-50">
-                      {item.isCorrect ? <CheckIcon /> : <XIcon />}
-                      <div>
-                        <span className="font-medium text-gray-700">{item.userName || 'User'}</span>
-                        <span className="text-gray-400"> answered {item.isCorrect ? 'correctly' : 'incorrectly'}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Card>
-          </div>
+            );
+          })}
         </div>
-      </div>
+      )}
+
+      {/* Full rankings table in terminal */}
+      <UbuntuTerminal title="root@linux-challenge: ~/leaderboard">
+        <TerminalPrompt user="root" path="~/leaderboard">cat rankings.log</TerminalPrompt>
+
+        {leaders.length === 0 ? (
+          <div className="mt-3">
+            <TerminalOutput color="text-[#FBBC05]">No participants registered yet.</TerminalOutput>
+          </div>
+        ) : (
+          <div className="mt-4">
+            {/* Table header */}
+            <div className="grid grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-3 text-xs text-[#ad7fa8] font-mono uppercase tracking-wider pb-2 border-b border-[#5c3566]/40 mb-2">
+              <span>Rank</span>
+              <span>Participant</span>
+              <span>Streak</span>
+              <span>⚡</span>
+              <span className="text-right">Score</span>
+              <span className="pl-4 hidden md:block">Progress</span>
+            </div>
+
+            {/* Rows */}
+            <div className="space-y-0">
+              {leaders.map((u) => {
+                const isYou = u.id === userId;
+                const isFastest = u.id === topSolverId && firstSolverCounts[u.id] > 0;
+                return (
+                  <div
+                    key={u.id}
+                    className={`grid grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-3 items-center py-2.5 font-mono border-b border-[#5c3566]/15 ${
+                      isYou ? 'bg-[#4285F4]/8 -mx-3 px-3 rounded-lg' : ''
+                    }`}
+                  >
+                    <span className="text-base">
+                      {u.rank <= 3 ? rankBadge(u.rank) : <span className="text-[#888a85] text-sm">{u.rank}</span>}
+                    </span>
+
+                    <div className="min-w-0">
+                      <span className={`text-base font-medium truncate block ${isYou ? 'text-[#729fcf]' : u.rank <= 3 ? 'text-[#34e534]' : 'text-[#eeeeec]'}`}>
+                        {u.name}
+                        {isFastest && <span className="ml-1.5 text-xs text-[#FBBC05]" title="Fastest solver">⚡</span>}
+                      </span>
+                      <span className="text-xs text-[#888a85] block truncate">{u.registerNumber}</span>
+                    </div>
+
+                    <span className="text-sm">
+                      {(u.streak || 0) > 0 ? (
+                        <span className="text-[#FBBC05]">🔥{u.streak}</span>
+                      ) : (
+                        <span className="text-[#888a85]">—</span>
+                      )}
+                    </span>
+
+                    <span className="text-xs text-[#FBBC05]">
+                      {firstSolverCounts[u.id] ? firstSolverCounts[u.id] : <span className="text-[#888a85]">—</span>}
+                    </span>
+
+                    <span className="text-right text-lg font-bold text-[#FBBC05]">
+                      {u.score || 0}
+                    </span>
+
+                    <span className="text-[#34e534]/40 text-xs pl-4 hidden md:block">
+                      {scoreBar(u.score || 0, maxScore)}
+                      {isYou && <span className="text-[#729fcf] ml-2">← you</span>}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 text-xs text-[#888a85] font-mono">
+              {leaders.length} participants · ⚡ = first-to-solve count · 🔥 = streak · Speed bonus: faster = more points
+            </div>
+          </div>
+        )}
+
+        <div className="mt-4">
+          <TerminalPrompt user="root" path="~/leaderboard">
+            <span className="text-[#34e534] animate-pulse-slow">█</span>
+          </TerminalPrompt>
+        </div>
+      </UbuntuTerminal>
     </div>
   );
-}
-
-function CheckIcon() {
-  return <span className="w-4 h-4 rounded-full bg-green-100 text-[#34A853] flex items-center justify-center text-[10px] mt-0.5 shrink-0">✓</span>;
-}
-function XIcon() {
-  return <span className="w-4 h-4 rounded-full bg-red-100 text-[#EA4335] flex items-center justify-center text-[10px] mt-0.5 shrink-0">✗</span>;
 }

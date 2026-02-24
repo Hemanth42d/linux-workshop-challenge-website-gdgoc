@@ -9,6 +9,7 @@ export const addUser = async (userData) => {
   const ref = await addDoc(collection(db, 'users'), {
     ...userData,
     score: 0,
+    streak: 0,
     joinedAt: new Date().toISOString(),
   });
   return ref.id;
@@ -26,8 +27,11 @@ export const subscribeLeaderboard = (callback) => {
   });
 };
 
-export const updateUserScore = async (userId, newScore) => {
-  await updateDoc(doc(db, 'users', userId), { score: newScore });
+export const updateUserScore = async (userId, newScore, streak) => {
+  const data = {};
+  if (newScore !== undefined) data.score = newScore;
+  if (streak !== undefined) data.streak = streak;
+  await updateDoc(doc(db, 'users', userId), data);
 };
 
 // ── Questions ──
@@ -62,11 +66,25 @@ export const getQuestionsForRound = async (round) => {
 
 // ── Submissions ──
 export const submitAnswer = async (data) => {
+  // Check if this is the first correct submission for this question
+  let isFirstSolver = false;
+  if (data.isCorrect) {
+    const q = query(
+      collection(db, 'submissions'),
+      where('questionId', '==', data.questionId),
+      where('isCorrect', '==', true),
+      limit(1)
+    );
+    const existing = await getDocs(q);
+    isFirstSolver = existing.empty;
+  }
+
   const ref = await addDoc(collection(db, 'submissions'), {
     ...data,
+    isFirstSolver,
     submittedAt: serverTimestamp(),
   });
-  return ref.id;
+  return { id: ref.id, isFirstSolver };
 };
 
 export const getUserSubmissionForQuestion = async (userId, questionId) => {
@@ -79,14 +97,13 @@ export const getUserSubmissionForQuestion = async (userId, questionId) => {
   return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
 };
 
-export const subscribeActivityFeed = (callback) => {
-  const q = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'), limit(20));
+export const subscribeActivityFeed = (callback, feedLimit = 30) => {
+  const q = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'), limit(feedLimit));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 };
 
-// ── Game State ──
 const GAME_STATE_DOC = 'current';
 
 export const getGameState = async () => {
@@ -112,6 +129,13 @@ export const initGameState = async () => {
       status: 'waiting',
       roundEndTime: null,
       currentQuestionIndex: 0,
+      // Dynamic config
+      challengeName: 'Linux Challenge',
+      challengeTagline: 'Real-time command challenge platform',
+      basePoints: 5,
+      maxSpeedBonus: 15,
+      hintCost: 3,
+      activityFeedLimit: 30,
     });
   }
 };
@@ -119,6 +143,48 @@ export const initGameState = async () => {
 // ── Participants count ──
 export const subscribeUsers = (callback) => {
   return onSnapshot(collection(db, 'users'), (snap) => {
+    callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+  });
+};
+
+// ── Admin Broadcast ──
+export const sendBroadcast = async (message) => {
+  await setDoc(doc(db, 'gameState', GAME_STATE_DOC), {
+    broadcastMessage: message,
+    broadcastAt: Date.now(),
+  }, { merge: true });
+};
+
+export const clearBroadcast = async () => {
+  await setDoc(doc(db, 'gameState', GAME_STATE_DOC), {
+    broadcastMessage: null,
+    broadcastAt: null,
+  }, { merge: true });
+};
+
+// ── Hints ──
+export const useHint = async (userId, questionId, hintCost) => {
+  const cost = hintCost || 3;
+  const user = await getUser(userId);
+  if (!user) return false;
+  const newScore = Math.max(0, (user.score || 0) - cost);
+  await updateDoc(doc(db, 'users', userId), { score: newScore });
+  return true;
+};
+
+// ── Submission Stats (for admin) ──
+export const getSubmissionStatsForQuestion = async (questionId) => {
+  const q = query(collection(db, 'submissions'), where('questionId', '==', questionId));
+  const snap = await getDocs(q);
+  const subs = snap.docs.map((d) => d.data());
+  const total = subs.length;
+  const correct = subs.filter((s) => s.isCorrect).length;
+  return { total, correct, incorrect: total - correct };
+};
+
+export const subscribeSubmissions = (callback) => {
+  const q = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'));
+  return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
   });
 };

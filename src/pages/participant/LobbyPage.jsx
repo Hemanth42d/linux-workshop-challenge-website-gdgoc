@@ -1,49 +1,73 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { subscribeGameState } from '../../services/firestore';
-import Card from '../../components/Card';
+import { useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
+import UbuntuTerminal, { TerminalPrompt, TerminalOutput } from '../../components/UbuntuTerminal';
+import MatrixRain from '../../components/MatrixRain';
 import StatusBadge from '../../components/StatusBadge';
-import { Loader2, Users } from 'lucide-react';
+import { DEFAULT_CONFIG } from '../../services/scoring';
 
 export default function LobbyPage() {
-  const [gameState, setGameState] = useState(null);
+  const { gameState, userName } = useOutletContext();
   const navigate = useNavigate();
-  const userName = localStorage.getItem('workshopUserName') || 'Participant';
 
   useEffect(() => {
-    const userId = localStorage.getItem('workshopUserId');
-    if (!userId) { navigate('/'); return; }
-
-    const unsub = subscribeGameState((state) => {
-      setGameState(state);
-      if (state?.status === 'round_active') navigate('/challenge');
-    });
-    return unsub;
-  }, [navigate]);
+    if (gameState?.status === 'round_active') navigate('/challenge');
+  }, [gameState?.status, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-green-50 p-4">
-      <div className="w-full max-w-lg text-center animate-fade-in">
-        <Card className="space-y-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-blue-50 mx-auto">
-            <Users className="text-[#4285F4]" size={24} />
+    <div className="max-w-2xl mx-auto animate-fade-in relative">
+      {/* Matrix rain background while waiting */}
+      {gameState?.status === 'waiting' && <MatrixRain columns={15} />}
+
+      <h1 className="text-2xl font-bold text-[#eeeeec] mb-6 font-mono relative z-10">Lobby</h1>
+
+      <div className="relative z-10">
+        <UbuntuTerminal title={`${userName}@linux-challenge: ~`}>
+          <TerminalPrompt user={userName} path="~">whoami</TerminalPrompt>
+          <TerminalOutput>{userName}</TerminalOutput>
+
+          <div className="mt-3">
+            <TerminalPrompt user={userName} path="~">challenge --status</TerminalPrompt>
+            <div className="mt-1">
+              {gameState ? <StatusBadge status={gameState.status} /> : <TerminalOutput color="text-[#888a85]">Connecting to server...</TerminalOutput>}
+            </div>
           </div>
-          <div>
-            <h2 className="text-xl font-bold text-gray-900">Welcome, {userName}</h2>
-            <p className="text-gray-500 text-sm mt-1">You're in the lobby. Hang tight.</p>
+
+          <div className="mt-3">
+            <TerminalPrompt user={userName} path="~">challenge --wait</TerminalPrompt>
+            <TerminalOutput color="text-[#FBBC05]">
+              <span className="animate-pulse-slow">⏳ Waiting for admin to start the round...</span>
+            </TerminalOutput>
           </div>
-          {gameState && <StatusBadge status={gameState.status} />}
-          <div className="flex items-center justify-center gap-2 text-gray-400 text-sm">
-            <Loader2 size={16} className="animate-spin" />
-            <span>Waiting for the admin to start the round...</span>
-          </div>
-          {gameState?.status === 'challenge_ended' && (
-            <p className="text-sm font-medium text-gray-600">The challenge has ended. Check the leaderboard!</p>
+
+          {/* Typing animation while waiting */}
+          {gameState?.status === 'waiting' && (
+            <div className="mt-3">
+              <TerminalPrompt user={userName} path="~">neofetch</TerminalPrompt>
+              <div className="mt-1 text-xs text-[#888a85] font-mono space-y-0.5">
+                <p className="text-[#34e534]">       .-/+oossssoo+/-.</p>
+                <p className="text-[#34e534]">    `:+ssssssssssssssss+:`</p>
+                <p className="text-[#34e534]">  -+ssssssssssssssssssss+-    <span className="text-[#729fcf]">{userName}@linux-challenge</span></p>
+                <p className="text-[#34e534]"> .ossssssssssssssssssssso.    <span className="text-[#888a85]">──────────────────────</span></p>
+                <p className="text-[#34e534]">  /sssssssssssssssssssss/     <span className="text-[#ad7fa8]">OS:</span> <span className="text-[#eeeeec]">{gameState?.challengeName || DEFAULT_CONFIG.challengeName} v1.0</span></p>
+                <p className="text-[#34e534]">   `:+ssssssssssssss+:`      <span className="text-[#ad7fa8]">Status:</span> <span className="text-[#FBBC05]">Standby</span></p>
+                <p className="text-[#34e534]">      .-/+oossoo+/-.         <span className="text-[#ad7fa8]">Shell:</span> <span className="text-[#eeeeec]">bash 5.1</span></p>
+              </div>
+            </div>
           )}
-        </Card>
-        <button onClick={() => navigate('/leaderboard')} className="mt-4 text-sm text-[#4285F4] hover:underline cursor-pointer">
-          View Leaderboard
-        </button>
+
+          {gameState?.status === 'challenge_ended' && (
+            <div className="mt-3">
+              <TerminalPrompt user={userName} path="~">echo $CHALLENGE_STATUS</TerminalPrompt>
+              <TerminalOutput>Challenge complete. Check the leaderboard for results.</TerminalOutput>
+            </div>
+          )}
+
+          <div className="mt-4">
+            <TerminalPrompt user={userName} path="~">
+              <span className="terminal-cursor" />
+            </TerminalPrompt>
+          </div>
+        </UbuntuTerminal>
       </div>
     </div>
   );

@@ -19,7 +19,24 @@ export function validateAnswer(userAnswer, correctAnswer, acceptableAnswers = []
 }
 
 export const QUESTION_TYPES = [
-  { value: 'command', label: 'Command Writing', description: 'User types the correct Linux command' },
-  { value: 'output', label: 'Output Prediction', description: 'User predicts command output or explanation' },
-  { value: 'fix', label: 'Fix the Command', description: 'User corrects an incorrect command' },
+  { value: 'command', label: 'Command Task', description: 'Participant types the correct Linux command' },
+  { value: 'output', label: 'Output Challenge', description: 'Participant predicts command output' },
+  { value: 'fix', label: 'Fix the Command', description: 'Participant corrects a broken command' },
 ];
+
+/**
+ * Generate a hint from the correct answer.
+ * Shows first char + underscores for the rest, preserving spaces.
+ * e.g., "ls -la" → "l_ -__"
+ */
+export function generateHint(correctAnswer) {
+  if (!correctAnswer) return 'No hint available';
+  return correctAnswer
+    .split('')
+    .map((ch, i) => {
+      if (ch === ' ' || ch === '-' || ch === '/') return ch;
+      if (i === 0) return ch;
+      return '_';
+    })
+    .join('');
+}

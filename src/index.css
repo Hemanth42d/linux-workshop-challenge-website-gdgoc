@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
 :root {
+  /* Ubuntu terminal palette */
+  --ubuntu-bg: #300a24;
+  --ubuntu-surface: #3c1130;
+  --ubuntu-panel: #2d0922;
+  --ubuntu-border: #5c3566;
+  --ubuntu-text: #eeeeec;
+  --ubuntu-muted: #ad7fa8;
+  --ubuntu-prompt-user: #34e534;
+  --ubuntu-prompt-path: #729fcf;
+  --ubuntu-dim: #888a85;
+  --ubuntu-titlebar: #201a1b;
+
+  /* Google colors */
   --blue: #4285F4;
   --red: #EA4335;
   --yellow: #FBBC05;
@@ -10,8 +23,12 @@
 body {
   margin: 0;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: #f8f9fa;
-  color: #202124;
+  background: #3c1130;
+  color: #eeeeec;
+}
+
+.font-mono {
+  font-family: 'JetBrains Mono', 'Ubuntu Mono', 'Fira Code', 'Consolas', monospace;
 }
 
 .animate-fade-in {
@@ -30,4 +47,105 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.6; }
+}
+
+.terminal-cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: #34e534;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+.animate-flash {
+  animation: flash 0.6s ease-out forwards;
+}
+
+@keyframes flash {
+  0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+@keyframes confettiFall {
+  0% { transform: translateY(-20px) translateX(0) rotate(0deg); opacity: 1; }
+  100% { transform: translateY(100vh) translateX(var(--drift, 0px)) rotate(720deg); opacity: 0; }
+}
+
+.animate-confetti-fall {
+  animation: confettiFall 2s ease-in forwards;
+}
+
+@keyframes slideInRight {
+  0% { transform: translateX(120%); opacity: 0; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.3s ease-out forwards;
+}
+
+@keyframes bounceIn {
+  0% { transform: scale(0.3); opacity: 0; }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.4s ease-out forwards;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #300a24; }
+::-webkit-scrollbar-thumb { background: #5c3566; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #ad7fa8; }
+
+/* Matrix rain animation for lobby */
+@keyframes matrixFall {
+  0% { transform: translateY(-100%); opacity: 1; }
+  80% { opacity: 0.6; }
+  100% { transform: translateY(100vh); opacity: 0; }
+}
+
+.animate-matrix-fall {
+  animation: matrixFall var(--duration, 3s) linear infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+/* Typewriter effect */
+@keyframes typewriter {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.animate-typewriter {
+  overflow: hidden;
+  white-space: nowrap;
+  animation: typewriter 1.5s steps(40, end) forwards;
+}
+
+/* Broadcast notification */
+@keyframes slideDown {
+  0% { transform: translateY(-100%); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-down {
+  animation: slideDown 0.4s ease-out forwards;
+}
+
+/* Mobile responsive: sidebar becomes bottom nav */
+@media (max-width: 768px) {
+  .sidebar-desktop { display: none; }
+  .main-with-sidebar { margin-left: 0; }
+  .mobile-bottom-nav { display: flex; }
+  .header-desktop-items { display: none; }
+}
+
+@media (min-width: 769px) {
+  .mobile-bottom-nav { display: none; }
 }
