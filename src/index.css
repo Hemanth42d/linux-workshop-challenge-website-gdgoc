@@ -149,3 +149,25 @@ body {
 @media (min-width: 769px) {
   .mobile-bottom-nav { display: none; }
 }
+
+/* Admin sidebar: auto-close on mobile */
+@media (max-width: 768px) {
+  .admin-sidebar { transform: translateX(calc(-100% - 2rem)); }
+  .admin-sidebar.open { transform: translateX(0); }
+  .admin-main { margin-left: 0 !important; padding: 1rem !important; }
+}
+
+/* Leaderboard table: horizontal scroll on small screens */
+@media (max-width: 640px) {
+  .leaderboard-grid { 
+    grid-template-columns: 2.5rem 1fr 3rem 5rem !important;
+  }
+  .leaderboard-hide-sm { display: none; }
+  .podium-grid { grid-template-columns: 1fr !important; }
+  .podium-first { order: -1; }
+}
+
+/* Neofetch: hide on very small screens */
+@media (max-width: 480px) {
+  .neofetch-info { display: none; }
+}

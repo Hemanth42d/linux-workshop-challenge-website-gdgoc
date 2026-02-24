@@ -34,7 +34,7 @@ const TABS = [
 export default function AdminDashboard() {
   const [authed, setAuthed] = useState(null);
   const [tab, setTab] = useState('overview');
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 768);
   const [gameState, setGameState] = useState(null);
   const [users, setUsers] = useState([]);
   const [questions, setQuestions] = useState([]);
@@ -67,7 +67,7 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#3c1130] relative">
-      <aside className={`fixed top-4 left-4 bottom-4 w-56 bg-[#300a24] border border-[#5c3566] rounded-2xl flex flex-col z-50 shadow-2xl transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[calc(100%+2rem)]'}`}>
+      <aside className={`admin-sidebar fixed top-4 left-4 bottom-4 w-56 bg-[#300a24] border border-[#5c3566] rounded-2xl flex flex-col z-50 shadow-2xl transition-transform duration-300 ${sidebarOpen ? 'translate-x-0 open' : '-translate-x-[calc(100%+2rem)]'}`}>
         <div className="p-4 border-b border-[#5c3566] flex items-center justify-between">
           <h2 className="font-bold text-[#eeeeec] text-xs flex items-center gap-2 font-mono">
             <span className="w-6 h-6 rounded-lg bg-[#4285F4] flex items-center justify-center">
@@ -103,6 +103,11 @@ export default function AdminDashboard() {
         </div>
       </aside>
 
+      {/* Mobile overlay when sidebar is open */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
       {/* Sidebar toggle button */}
       {!sidebarOpen && (
         <button
@@ -114,7 +119,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Main content */}
-      <main className={`transition-all duration-300 ${sidebarOpen ? 'ml-64' : 'ml-0'} p-8 min-h-screen`}>
+      <main className={`admin-main transition-all duration-300 ${sidebarOpen ? 'md:ml-64' : 'ml-0'} p-4 md:p-8 min-h-screen`}>
         <div className="max-w-5xl mx-auto animate-fade-in">
           {tab === 'overview' && <OverviewTab gameState={gameState} users={users} questions={questions} submissions={submissions} />}
           {tab === 'tasks' && <TasksTab questions={questions} submissions={submissions} />}
@@ -486,7 +491,6 @@ function BulkUpload() {
 
       {/* Input methods */}
       <div className="space-y-3 mb-4">
-        {/* File upload */}
         <div>
           <label className="block text-xs font-mono text-[#ad7fa8] uppercase tracking-wider mb-1.5">Upload JSON File</label>
           <label className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg border border-dashed border-[#5c3566] bg-[#300a24] hover:border-[#ad7fa8] cursor-pointer transition-colors">
@@ -496,7 +500,6 @@ function BulkUpload() {
           </label>
         </div>
 
-        {/* Or paste */}
         <div>
           <label className="block text-xs font-mono text-[#ad7fa8] uppercase tracking-wider mb-1.5">Or Paste JSON</label>
           <textarea
@@ -765,7 +768,8 @@ function LeaderboardTab({ leaders }) {
         {leaders.length === 0 ? (
           <p className="text-sm text-[#888a85] py-8 text-center font-mono">No participants yet.</p>
         ) : (
-          <table className="w-full text-sm" role="table">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[500px]" role="table">
             <thead>
               <tr className="border-b border-[#5c3566]/50">
                 <th className="text-left py-3 px-3 text-[#ad7fa8] font-mono font-medium text-xs">#</th>
@@ -795,6 +799,7 @@ function LeaderboardTab({ leaders }) {
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </Card>
     </div>

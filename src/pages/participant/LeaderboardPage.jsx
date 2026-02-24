@@ -49,7 +49,7 @@ export default function LeaderboardPage() {
 
       {/* Top 3 podium */}
       {leaders.length >= 3 && (
-        <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="podium-grid grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[leaders[1], leaders[0], leaders[2]].map((u, i) => {
             const pos = [2, 1, 3][i];
             const colors = {
@@ -59,7 +59,7 @@ export default function LeaderboardPage() {
             };
             const isFastest = u.id === topSolverId && firstSolverCounts[u.id] > 0;
             return (
-              <div key={u.id} className={`rounded-xl border p-5 text-center ${colors[pos]} ${pos === 1 ? 'scale-105' : ''}`}>
+              <div key={u.id} className={`rounded-xl border p-4 sm:p-5 text-center ${colors[pos]} ${pos === 1 ? 'sm:scale-105 podium-first' : ''}`}>
                 <div className="text-3xl mb-2">{rankBadge(pos)}</div>
                 <p className="text-lg font-bold text-[#eeeeec] truncate">{u.name}</p>
                 <p className="text-sm font-mono text-[#ad7fa8] mt-0.5">{u.registerNumber}</p>
@@ -90,11 +90,11 @@ export default function LeaderboardPage() {
         ) : (
           <div className="mt-4">
             {/* Table header */}
-            <div className="grid grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-3 text-xs text-[#ad7fa8] font-mono uppercase tracking-wider pb-2 border-b border-[#5c3566]/40 mb-2">
+            <div className="leaderboard-grid grid grid-cols-[2.5rem_1fr_3rem_5rem] sm:grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-2 sm:gap-x-3 text-xs text-[#ad7fa8] font-mono uppercase tracking-wider pb-2 border-b border-[#5c3566]/40 mb-2">
               <span>Rank</span>
               <span>Participant</span>
-              <span>Streak</span>
-              <span>⚡</span>
+              <span className="leaderboard-hide-sm">Streak</span>
+              <span className="leaderboard-hide-sm">⚡</span>
               <span className="text-right">Score</span>
               <span className="pl-4 hidden md:block">Progress</span>
             </div>
@@ -107,7 +107,7 @@ export default function LeaderboardPage() {
                 return (
                   <div
                     key={u.id}
-                    className={`grid grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-3 items-center py-2.5 font-mono border-b border-[#5c3566]/15 ${
+                    className={`leaderboard-grid grid grid-cols-[2.5rem_1fr_3rem_5rem] sm:grid-cols-[3rem_1fr_4rem_4rem_6rem_1fr] gap-x-2 sm:gap-x-3 items-center py-2.5 font-mono border-b border-[#5c3566]/15 ${
                       isYou ? 'bg-[#4285F4]/8 -mx-3 px-3 rounded-lg' : ''
                     }`}
                   >
@@ -123,7 +123,7 @@ export default function LeaderboardPage() {
                       <span className="text-xs text-[#888a85] block truncate">{u.registerNumber}</span>
                     </div>
 
-                    <span className="text-sm">
+                    <span className="text-sm leaderboard-hide-sm">
                       {(u.streak || 0) > 0 ? (
                         <span className="text-[#FBBC05]">🔥{u.streak}</span>
                       ) : (
@@ -131,7 +131,7 @@ export default function LeaderboardPage() {
                       )}
                     </span>
 
-                    <span className="text-xs text-[#FBBC05]">
+                    <span className="text-xs text-[#FBBC05] leaderboard-hide-sm">
                       {firstSolverCounts[u.id] ? firstSolverCounts[u.id] : <span className="text-[#888a85]">—</span>}
                     </span>
 

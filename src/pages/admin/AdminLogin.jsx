@@ -45,24 +45,24 @@ export default function AdminLogin() {
             <TerminalOutput color="text-[#888a85]">[sudo] credentials required for admin access</TerminalOutput>
 
             <div className="mt-4">
-              <div className="flex items-center px-3 py-2.5 rounded-lg border border-[#5c3566]/50 bg-[#2d0922] focus-within:border-[#5c3566]">
+              <div className="flex items-center px-3 py-2.5 rounded-lg border-2 border-[#5c3566] bg-[#2d0922] focus-within:border-[#ad7fa8]">
                 <span className="text-[#eeeeec] font-mono text-sm mr-1 shrink-0">Email: </span>
                 <input
                   type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com"
-                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#888a85]/40 focus:outline-none caret-[#34e534]"
+                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#ad7fa8] focus:outline-none caret-[#34e534]"
                   autoComplete="off"
                 />
               </div>
             </div>
 
             <div className="mt-3">
-              <div className="flex items-center px-3 py-2.5 rounded-lg border border-[#5c3566]/50 bg-[#2d0922] focus-within:border-[#5c3566]">
+              <div className="flex items-center px-3 py-2.5 rounded-lg border-2 border-[#5c3566] bg-[#2d0922] focus-within:border-[#ad7fa8]">
                 <span className="text-[#eeeeec] font-mono text-sm mr-1 shrink-0">Password: </span>
                 <input
                   type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#888a85]/40 focus:outline-none caret-[#34e534]"
+                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#ad7fa8] focus:outline-none caret-[#34e534]"
                 />
                 <button
                   type="button"

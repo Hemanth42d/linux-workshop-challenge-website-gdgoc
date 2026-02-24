@@ -43,14 +43,14 @@ export default function LobbyPage() {
           {gameState?.status === 'waiting' && (
             <div className="mt-3">
               <TerminalPrompt user={userName} path="~">neofetch</TerminalPrompt>
-              <div className="mt-1 text-xs text-[#888a85] font-mono space-y-0.5">
+              <div className="mt-1 text-xs text-[#888a85] font-mono space-y-0.5 overflow-x-auto">
                 <p className="text-[#34e534]">       .-/+oossssoo+/-.</p>
                 <p className="text-[#34e534]">    `:+ssssssssssssssss+:`</p>
-                <p className="text-[#34e534]">  -+ssssssssssssssssssss+-    <span className="text-[#729fcf]">{userName}@linux-challenge</span></p>
-                <p className="text-[#34e534]"> .ossssssssssssssssssssso.    <span className="text-[#888a85]">──────────────────────</span></p>
-                <p className="text-[#34e534]">  /sssssssssssssssssssss/     <span className="text-[#ad7fa8]">OS:</span> <span className="text-[#eeeeec]">{gameState?.challengeName || DEFAULT_CONFIG.challengeName} v1.0</span></p>
-                <p className="text-[#34e534]">   `:+ssssssssssssss+:`      <span className="text-[#ad7fa8]">Status:</span> <span className="text-[#FBBC05]">Standby</span></p>
-                <p className="text-[#34e534]">      .-/+oossoo+/-.         <span className="text-[#ad7fa8]">Shell:</span> <span className="text-[#eeeeec]">bash 5.1</span></p>
+                <p className="text-[#34e534]">  -+ssssssssssssssssssss+-    <span className="neofetch-info text-[#729fcf]">{userName}@linux-challenge</span></p>
+                <p className="text-[#34e534]"> .ossssssssssssssssssssso.    <span className="neofetch-info text-[#888a85]">──────────────────────</span></p>
+                <p className="text-[#34e534]">  /sssssssssssssssssssss/     <span className="neofetch-info"><span className="text-[#ad7fa8]">OS:</span> <span className="text-[#eeeeec]">{gameState?.challengeName || DEFAULT_CONFIG.challengeName} v1.0</span></span></p>
+                <p className="text-[#34e534]">   `:+ssssssssssssss+:`      <span className="neofetch-info"><span className="text-[#ad7fa8]">Status:</span> <span className="text-[#FBBC05]">Standby</span></span></p>
+                <p className="text-[#34e534]">      .-/+oossoo+/-.         <span className="neofetch-info"><span className="text-[#ad7fa8]">Shell:</span> <span className="text-[#eeeeec]">bash 5.1</span></span></p>
               </div>
             </div>
           )}

@@ -28,11 +28,11 @@ export default function ActivityPage() {
         ) : (
           <div className="mt-3 space-y-1">
             {feed.map((item, idx) => (
-              <div key={item.id} className={`font-mono text-base py-1 ${idx === 0 ? 'animate-fade-in' : ''}`}>
-                <span className={`inline-block w-14 ${item.isCorrect ? 'text-[#34e534]' : 'text-[#EA4335]'}`}>
+              <div key={item.id} className={`font-mono text-sm sm:text-base py-1 flex flex-wrap items-center gap-x-1 ${idx === 0 ? 'animate-fade-in' : ''}`}>
+                <span className={`inline-block w-14 shrink-0 ${item.isCorrect ? 'text-[#34e534]' : 'text-[#EA4335]'}`}>
                   [{item.isCorrect ? 'PASS' : 'FAIL'}]
                 </span>
-                <span className="text-[#ad7fa8] mr-2">{item.userName || 'user'}</span>
+                <span className="text-[#ad7fa8]">{item.userName || 'user'}</span>
                 <span className="text-[#888a85]">
                   {item.isCorrect ? '→ task completed' : '→ task failed'}
                 </span>

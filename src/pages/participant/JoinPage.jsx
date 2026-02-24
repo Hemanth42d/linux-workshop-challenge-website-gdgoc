@@ -57,12 +57,12 @@ export default function JoinPage() {
 
             <div className="mt-4">
               <TerminalPrompt user="guest" path="~">read -p "Name: " PARTICIPANT_NAME</TerminalPrompt>
-              <div className="flex items-center mt-1 ml-0">
-                <span className="text-[#eeeeec] mr-1">Name: </span>
+              <div className="flex items-center mt-1 ml-0 px-3 py-2.5 rounded-lg border-2 border-[#5c3566] bg-[#2d0922] focus-within:border-[#ad7fa8]">
+                <span className="text-[#eeeeec] mr-1 shrink-0">Name: </span>
                 <input
                   type="text" value={name} onChange={(e) => setName(e.target.value)}
                   placeholder="Enter your name"
-                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#888a85]/40 focus:outline-none caret-[#34e534]"
+                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#ad7fa8] focus:outline-none caret-[#34e534]"
                   autoComplete="off"
                 />
               </div>
@@ -70,12 +70,12 @@ export default function JoinPage() {
 
             <div className="mt-3">
               <TerminalPrompt user="guest" path="~">read -p "Register ID: " REG_ID</TerminalPrompt>
-              <div className="flex items-center mt-1 ml-0">
-                <span className="text-[#eeeeec] mr-1">Register ID: </span>
+              <div className="flex items-center mt-1 ml-0 px-3 py-2.5 rounded-lg border-2 border-[#5c3566] bg-[#2d0922] focus-within:border-[#ad7fa8]">
+                <span className="text-[#eeeeec] mr-1 shrink-0">Register ID: </span>
                 <input
                   type="text" value={registerNumber} onChange={(e) => setRegisterNumber(e.target.value)}
                   placeholder="Register number or email"
-                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#888a85]/40 focus:outline-none caret-[#34e534]"
+                  className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#ad7fa8] focus:outline-none caret-[#34e534]"
                   autoComplete="off"
                 />
               </div>

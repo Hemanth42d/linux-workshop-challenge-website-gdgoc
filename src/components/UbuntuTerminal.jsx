@@ -18,7 +18,7 @@ export default function UbuntuTerminal({ title = 'participant@linux-challenge: ~
         <div className="w-16" /> {/* spacer for centering */}
       </div>
       {/* Terminal body — Ubuntu default purple-dark bg */}
-      <div className="bg-[#300a24] p-5 font-mono text-sm leading-relaxed min-h-[120px]">
+      <div className="bg-[#300a24] p-3 sm:p-5 font-mono text-sm leading-relaxed min-h-[120px]">
         {children}
       </div>
     </div>
