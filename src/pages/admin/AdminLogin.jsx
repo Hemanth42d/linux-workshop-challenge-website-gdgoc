@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { adminLogin } from '../../services/auth';
 import UbuntuTerminal, { TerminalPrompt, TerminalOutput } from '../../components/UbuntuTerminal';
 import Button from '../../components/Button';
+import { Eye, EyeOff } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
@@ -42,9 +44,9 @@ export default function AdminLogin() {
             <TerminalPrompt user="root" path="~">sudo authenticate --admin</TerminalPrompt>
             <TerminalOutput color="text-[#888a85]">[sudo] credentials required for admin access</TerminalOutput>
 
-            <div className="mt-3">
-              <div className="flex items-center">
-                <span className="text-[#eeeeec] font-mono text-sm mr-1">Email: </span>
+            <div className="mt-4">
+              <div className="flex items-center px-3 py-2.5 rounded-lg border border-[#5c3566]/50 bg-[#2d0922] focus-within:border-[#5c3566]">
+                <span className="text-[#eeeeec] font-mono text-sm mr-1 shrink-0">Email: </span>
                 <input
                   type="email" value={email} onChange={(e) => setEmail(e.target.value)}
                   placeholder="admin@example.com"
@@ -54,14 +56,22 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            <div className="mt-2">
-              <div className="flex items-center">
-                <span className="text-[#eeeeec] font-mono text-sm mr-1">Password: </span>
+            <div className="mt-3">
+              <div className="flex items-center px-3 py-2.5 rounded-lg border border-[#5c3566]/50 bg-[#2d0922] focus-within:border-[#5c3566]">
+                <span className="text-[#eeeeec] font-mono text-sm mr-1 shrink-0">Password: </span>
                 <input
-                  type="password" value={password} onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   className="flex-1 bg-transparent text-[#34e534] font-mono text-sm placeholder-[#888a85]/40 focus:outline-none caret-[#34e534]"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="ml-2 text-[#888a85] hover:text-[#ad7fa8] cursor-pointer transition-colors shrink-0"
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
+                >
+                  {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
+                </button>
               </div>
             </div>
 

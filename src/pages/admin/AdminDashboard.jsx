@@ -67,7 +67,6 @@ export default function AdminDashboard() {
 
   return (
     <div className="min-h-screen bg-[#3c1130] relative">
-      {/* Floating Sidebar */}
       <aside className={`fixed top-4 left-4 bottom-4 w-56 bg-[#300a24] border border-[#5c3566] rounded-2xl flex flex-col z-50 shadow-2xl transition-transform duration-300 ${sidebarOpen ? 'translate-x-0' : '-translate-x-[calc(100%+2rem)]'}`}>
         <div className="p-4 border-b border-[#5c3566] flex items-center justify-between">
           <h2 className="font-bold text-[#eeeeec] text-xs flex items-center gap-2 font-mono">
