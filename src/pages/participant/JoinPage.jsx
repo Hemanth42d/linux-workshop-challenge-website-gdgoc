@@ -22,12 +22,14 @@ export default function JoinPage() {
     setLoading(true);
     setError('');
     try {
-      const userId = await addUser({ name: name.trim(), registerNumber: registerNumber.trim() });
+      const joinPromise = addUser({ name: name.trim(), registerNumber: registerNumber.trim() });
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+      const userId = await Promise.race([joinPromise, timeoutPromise]);
       localStorage.setItem('workshopUserId', userId);
       localStorage.setItem('workshopUserName', name.trim());
       navigate('/lobby');
     } catch (err) {
-      setError('Failed to join. Please try again.');
+      setError(err.message === 'timeout' ? 'Connection timed out. Check your internet and try again.' : 'Failed to join. Please try again.');
       console.error(err);
     } finally {
       setLoading(false);

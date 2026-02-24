@@ -4,12 +4,13 @@ import {
   subscribeGameState, getQuestionsForRound, submitAnswer,
   getUserSubmissionForQuestion, getUser, updateUserScore
 } from '../../services/firestore';
+import { validateAnswer, QUESTION_TYPES } from '../../services/validation';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Timer from '../../components/Timer';
 import StatusBadge from '../../components/StatusBadge';
-import { Send, CheckCircle, XCircle, Terminal } from 'lucide-react';
+import { Send, CheckCircle, XCircle, Terminal, FileOutput, Wrench } from 'lucide-react';
 
 export default function ChallengePage() {
   const [gameState, setGameState] = useState(null);
@@ -56,13 +57,16 @@ export default function ChallengePage() {
 
   const currentQuestion = questions[currentQIdx];
   const isRoundActive = gameState?.status === 'round_active';
+  const typeIcons = { command: Terminal, output: FileOutput, fix: Wrench };
+  const typeLabel = currentQuestion ? (QUESTION_TYPES.find((t) => t.value === currentQuestion.questionType)?.label || 'Question') : '';
+  const TypeIcon = currentQuestion ? (typeIcons[currentQuestion.questionType] || Terminal) : Terminal;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!answer.trim() || !currentQuestion || submitted) return;
     setSubmitting(true);
     try {
-      const isCorrect = answer.trim().toLowerCase() === currentQuestion.correctAnswer.trim().toLowerCase();
+      const isCorrect = validateAnswer(answer, currentQuestion.correctAnswer, currentQuestion.acceptableAnswers);
       await submitAnswer({
         userId,
         questionId: currentQuestion.id,
@@ -109,7 +113,12 @@ export default function ChallengePage() {
           {gameState?.roundEndTime && <Timer endTime={gameState.roundEndTime} />}
         </div>
         <Card className="mb-4">
-          <div className="mb-1 text-xs font-semibold text-[#4285F4] uppercase tracking-wide">Question {currentQIdx + 1}</div>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-xs font-semibold text-[#4285F4] uppercase tracking-wide">Question {currentQIdx + 1}</span>
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-50 text-[#4285F4] text-xs font-medium">
+              <TypeIcon size={10} />{typeLabel}
+            </span>
+          </div>
           <p className="text-lg font-medium text-gray-900 mb-6">{currentQuestion.questionText}</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             <Input

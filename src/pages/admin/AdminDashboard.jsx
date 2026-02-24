@@ -13,8 +13,10 @@ import StatusBadge from '../../components/StatusBadge';
 import Loader from '../../components/Loader';
 import {
   Users, HelpCircle, Play, Square, SkipForward, Trophy,
-  Plus, Trash2, Edit3, Save, X, LogOut, LayoutDashboard, Settings, Award
+  Plus, Trash2, Edit3, Save, X, LogOut, LayoutDashboard, Settings, Award,
+  Terminal, FileOutput, Wrench
 } from 'lucide-react';
+import { QUESTION_TYPES } from '../../services/validation';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -149,18 +151,37 @@ function OverviewTab({ gameState, users, questions }) {
 }
 
 // ── Questions Tab ──
+const typeIcons = { command: Terminal, output: FileOutput, fix: Wrench };
+const selectClass = "w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#4285F4]/30 focus:border-[#4285F4] text-sm";
+
 function QuestionsTab({ questions }) {
-  const [form, setForm] = useState({ questionText: '', correctAnswer: '', round: 1, difficulty: 'medium' });
+  const [form, setForm] = useState({
+    questionText: '', correctAnswer: '', acceptableAnswers: '',
+    questionType: 'command', round: 1, difficulty: 'medium',
+  });
   const [editingId, setEditingId] = useState(null);
   const [saving, setSaving] = useState(false);
 
-  const resetForm = () => { setForm({ questionText: '', correctAnswer: '', round: 1, difficulty: 'medium' }); setEditingId(null); };
+  const resetForm = () => {
+    setForm({ questionText: '', correctAnswer: '', acceptableAnswers: '', questionType: 'command', round: 1, difficulty: 'medium' });
+    setEditingId(null);
+  };
 
   const handleSave = async () => {
     if (!form.questionText || !form.correctAnswer) return;
     setSaving(true);
     try {
-      const data = { ...form, round: Number(form.round) };
+      const acceptableArr = form.acceptableAnswers
+        ? form.acceptableAnswers.split(',').map((s) => s.trim()).filter(Boolean)
+        : [];
+      const data = {
+        questionText: form.questionText,
+        correctAnswer: form.correctAnswer,
+        acceptableAnswers: acceptableArr,
+        questionType: form.questionType,
+        round: Number(form.round),
+        difficulty: form.difficulty,
+      };
       if (editingId) {
         await updateQuestion(editingId, data);
       } else {
@@ -176,7 +197,14 @@ function QuestionsTab({ questions }) {
 
   const handleEdit = (q) => {
     setEditingId(q.id);
-    setForm({ questionText: q.questionText, correctAnswer: q.correctAnswer, round: q.round, difficulty: q.difficulty || 'medium' });
+    setForm({
+      questionText: q.questionText,
+      correctAnswer: q.correctAnswer,
+      acceptableAnswers: (q.acceptableAnswers || []).join(', '),
+      questionType: q.questionType || 'command',
+      round: q.round,
+      difficulty: q.difficulty || 'medium',
+    });
   };
 
   const handleDelete = async (id) => {
@@ -189,19 +217,40 @@ function QuestionsTab({ questions }) {
       <Card className="mb-6">
         <h3 className="font-semibold text-gray-900 mb-4 text-sm">{editingId ? 'Edit Question' : 'Add New Question'}</h3>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          {/* Question Type */}
+          <div className="md:col-span-2 space-y-1.5">
+            <label className="block text-sm font-medium text-gray-700">Question Type</label>
+            <div className="grid grid-cols-3 gap-3">
+              {QUESTION_TYPES.map((t) => {
+                const Icon = typeIcons[t.value];
+                const selected = form.questionType === t.value;
+                return (
+                  <button
+                    key={t.value}
+                    type="button"
+                    onClick={() => setForm({ ...form, questionType: t.value })}
+                    className={`p-3 rounded-lg border-2 text-left transition-all cursor-pointer ${
+                      selected ? 'border-[#4285F4] bg-blue-50/50' : 'border-gray-100 hover:border-gray-200'
+                    }`}
+                  >
+                    <Icon size={16} className={selected ? 'text-[#4285F4]' : 'text-gray-400'} />
+                    <p className={`text-sm font-medium mt-1 ${selected ? 'text-[#4285F4]' : 'text-gray-700'}`}>{t.label}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">{t.description}</p>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
           <div className="md:col-span-2">
             <Input label="Question Text" placeholder="e.g., What command lists files in a directory?" value={form.questionText} onChange={(e) => setForm({ ...form, questionText: e.target.value })} />
           </div>
           <Input label="Correct Answer" placeholder="e.g., ls" value={form.correctAnswer} onChange={(e) => setForm({ ...form, correctAnswer: e.target.value })} />
+          <Input label="Acceptable Answers (comma-separated, optional)" placeholder='e.g., ls -a, ls -A' value={form.acceptableAnswers} onChange={(e) => setForm({ ...form, acceptableAnswers: e.target.value })} />
           <div className="grid grid-cols-2 gap-4">
             <Input label="Round" type="number" min="1" value={form.round} onChange={(e) => setForm({ ...form, round: e.target.value })} />
             <div className="space-y-1.5">
               <label className="block text-sm font-medium text-gray-700">Difficulty</label>
-              <select
-                className="w-full px-4 py-2.5 rounded-lg border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-[#4285F4]/30 focus:border-[#4285F4] text-sm"
-                value={form.difficulty}
-                onChange={(e) => setForm({ ...form, difficulty: e.target.value })}
-              >
+              <select className={selectClass} value={form.difficulty} onChange={(e) => setForm({ ...form, difficulty: e.target.value })}>
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
@@ -222,22 +271,35 @@ function QuestionsTab({ questions }) {
           <p className="text-sm text-gray-400 py-4 text-center">No questions added yet.</p>
         ) : (
           <div className="space-y-2">
-            {questions.map((q) => (
-              <div key={q.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 group">
-                <div className="flex-1 min-w-0 mr-4">
-                  <p className="text-sm font-medium text-gray-900 truncate">{q.questionText}</p>
-                  <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                    <span>Round {q.round}</span>
-                    <span className="capitalize">{q.difficulty || 'medium'}</span>
-                    <span>Answer: <code className="bg-gray-200 px-1.5 py-0.5 rounded text-gray-600">{q.correctAnswer}</code></span>
+            {questions.map((q) => {
+              const TypeIcon = typeIcons[q.questionType] || HelpCircle;
+              const typeLabel = QUESTION_TYPES.find((t) => t.value === q.questionType)?.label || q.questionType;
+              return (
+                <div key={q.id} className="flex items-center justify-between p-3 rounded-lg bg-gray-50 group">
+                  <div className="flex items-start gap-3 flex-1 min-w-0 mr-4">
+                    <div className="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center shrink-0 mt-0.5">
+                      <TypeIcon size={14} className="text-gray-500" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 truncate">{q.questionText}</p>
+                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-400 flex-wrap">
+                        <span className="bg-blue-50 text-[#4285F4] px-1.5 py-0.5 rounded font-medium">{typeLabel}</span>
+                        <span>Round {q.round}</span>
+                        <span className="capitalize">{q.difficulty || 'medium'}</span>
+                        <span>Answer: <code className="bg-gray-200 px-1.5 py-0.5 rounded text-gray-600">{q.correctAnswer}</code></span>
+                        {q.acceptableAnswers?.length > 0 && (
+                          <span>Also: {q.acceptableAnswers.map((a) => <code key={a} className="bg-gray-200 px-1 py-0.5 rounded text-gray-600 mr-1">{a}</code>)}</span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button onClick={() => handleEdit(q)} className="p-2 hover:bg-white rounded-lg cursor-pointer" aria-label="Edit question"><Edit3 size={14} className="text-gray-500" /></button>
+                    <button onClick={() => handleDelete(q.id)} className="p-2 hover:bg-white rounded-lg cursor-pointer" aria-label="Delete question"><Trash2 size={14} className="text-[#EA4335]" /></button>
                   </div>
                 </div>
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleEdit(q)} className="p-2 hover:bg-white rounded-lg cursor-pointer" aria-label="Edit question"><Edit3 size={14} className="text-gray-500" /></button>
-                  <button onClick={() => handleDelete(q.id)} className="p-2 hover:bg-white rounded-lg cursor-pointer" aria-label="Delete question"><Trash2 size={14} className="text-[#EA4335]" /></button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </Card>

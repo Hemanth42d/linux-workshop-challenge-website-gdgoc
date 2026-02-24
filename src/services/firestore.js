@@ -5,12 +5,11 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 
-// ── Users ──
 export const addUser = async (userData) => {
   const ref = await addDoc(collection(db, 'users'), {
     ...userData,
     score: 0,
-    joinedAt: serverTimestamp(),
+    joinedAt: new Date().toISOString(),
   });
   return ref.id;
 };
