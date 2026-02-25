@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { subscribeGameState, getUser, subscribeUsers, subscribeLeaderboard } from '../../services/firestore';
+import { subscribeGameState, subscribeUser, subscribeUserCount, subscribeLeaderboardTop } from '../../services/firestore';
 import { DEFAULT_CONFIG } from '../../services/scoring';
 import StatusBadge from '../../components/StatusBadge';
 import RankNotification from '../../components/RankNotification';
@@ -32,8 +32,8 @@ export default function ParticipantLayout() {
   useEffect(() => {
     if (!userId) { navigate('/'); return; }
     const unsub1 = subscribeGameState(setGameState);
-    const unsub2 = subscribeUsers((users) => setParticipantCount(users.length));
-    const unsub3 = subscribeLeaderboard((leaders) => {
+    const unsub2 = subscribeUserCount(setParticipantCount);
+    const unsub3 = subscribeLeaderboardTop((leaders) => {
       const me = leaders.find((u) => u.id === userId);
       if (me) {
         const newRank = me.rank;
@@ -44,27 +44,16 @@ export default function ParticipantLayout() {
         }
         rankRef.current = newRank;
       }
-    });
-    return () => { unsub1(); unsub2(); unsub3(); };
-  }, [userId, navigate, soundEnabled]);
-
-  useEffect(() => {
-    if (!userId) return;
-    const interval = setInterval(async () => {
-      const user = await getUser(userId);
+    }, 50);
+    // Real-time user data (replaces polling)
+    const unsub4 = subscribeUser(userId, (user) => {
       if (user) {
         setScore(user.score || 0);
         setStreak(user.streak || 0);
       }
-    }, 5000);
-    getUser(userId).then((u) => {
-      if (u) {
-        setScore(u.score || 0);
-        setStreak(u.streak || 0);
-      }
     });
-    return () => clearInterval(interval);
-  }, [userId]);
+    return () => { unsub1(); unsub2(); unsub3(); unsub4(); };
+  }, [userId, navigate, soundEnabled]);
 
   // Keyboard shortcuts: Ctrl+1-4 to navigate
   const handleKeyboard = useCallback((e) => {

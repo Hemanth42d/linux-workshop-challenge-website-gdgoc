@@ -2,11 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Users: anyone can create, only owner can update
+    // Users: anyone can create (join), score updates allowed
     match /users/{userId} {
       allow read: if true;
-      allow create: if true;
-      allow update: if request.auth != null || resource.data.keys().hasAny(['score']);
+      allow create: if request.resource.data.keys().hasAll(['name', 'registerNumber', 'score', 'streak'])
+                    && request.resource.data.score == 0
+                    && request.resource.data.streak == 0;
+      allow update: if request.auth != null
+                    || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['score', 'streak']));
     }
 
     // Questions: admin only write, anyone can read
@@ -15,10 +18,12 @@ service cloud.firestore {
       allow write: if request.auth != null;
     }
 
-    // Submissions: authenticated or anonymous can create their own
+    // Submissions: anyone can create (submit answer), admin can manage
     match /submissions/{submissionId} {
       allow read: if true;
-      allow create: if true;
+      allow create: if request.resource.data.keys().hasAll(['userId', 'questionId', 'answer', 'isCorrect'])
+                    && request.resource.data.answer is string
+                    && request.resource.data.answer.size() <= 500;
       allow update, delete: if request.auth != null;
     }
 

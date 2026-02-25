@@ -38,8 +38,8 @@ export default function JoinPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#3c1130] p-4">
-      <div className="w-full max-w-lg animate-fade-in">
+    <div className="min-h-screen flex items-start justify-center bg-[#3c1130] p-4 pt-[10vh] sm:pt-[15vh]">
+      <div className="w-full max-w-lg">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#300a24] border border-[#5c3566] mb-4">
@@ -81,11 +81,11 @@ export default function JoinPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="mt-3">
+            <div className="mt-3 min-h-[1.5rem]">
+              {error && (
                 <TerminalOutput color="text-[#EA4335]">Error: {error}</TerminalOutput>
-              </div>
-            )}
+              )}
+            </div>
 
             <div className="mt-5">
               <Button variant="terminal" type="submit" disabled={loading} className="w-full">

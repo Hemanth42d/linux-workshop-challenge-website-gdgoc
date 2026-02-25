@@ -27,6 +27,21 @@ export const subscribeLeaderboard = (callback) => {
   });
 };
 
+// Lightweight: only top N for participant view
+export const subscribeLeaderboardTop = (callback, topN = 50) => {
+  const q = query(collection(db, 'users'), orderBy('score', 'desc'), limit(topN));
+  return onSnapshot(q, (snap) => {
+    callback(snap.docs.map((d, i) => ({ id: d.id, rank: i + 1, ...d.data() })));
+  });
+};
+
+// Subscribe to a single user's data (avoids polling)
+export const subscribeUser = (userId, callback) => {
+  return onSnapshot(doc(db, 'users', userId), (snap) => {
+    callback(snap.exists() ? { id: snap.id, ...snap.data() } : null);
+  });
+};
+
 export const updateUserScore = async (userId, newScore, streak) => {
   const data = {};
   if (newScore !== undefined) data.score = newScore;
@@ -97,7 +112,7 @@ export const getUserSubmissionForQuestion = async (userId, questionId) => {
   return snap.empty ? null : { id: snap.docs[0].id, ...snap.docs[0].data() };
 };
 
-export const subscribeActivityFeed = (callback, feedLimit = 30) => {
+export const subscribeActivityFeed = (callback, feedLimit = 20) => {
   const q = query(collection(db, 'submissions'), orderBy('submittedAt', 'desc'), limit(feedLimit));
   return onSnapshot(q, (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
@@ -140,7 +155,14 @@ export const initGameState = async () => {
   }
 };
 
-// ── Participants count ──
+// ── Participants count (lightweight — only count, not full data) ──
+export const subscribeUserCount = (callback) => {
+  return onSnapshot(collection(db, 'users'), (snap) => {
+    callback(snap.size);
+  });
+};
+
+// ── Full user list (admin only) ──
 export const subscribeUsers = (callback) => {
   return onSnapshot(collection(db, 'users'), (snap) => {
     callback(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
